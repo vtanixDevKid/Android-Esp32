@@ -1,11 +1,5 @@
 # Android Esp32
 
-install figlet first :3 then espeak
-```bash
-pkg install figlet && espeak
-```
-
-
 so, my target is making an app with connection to esp32 http recieve from http post to control other module that attach to esp32.
 
 ## Objective
@@ -38,6 +32,16 @@ so idk nvm. we can use termux instead.
 ### Android
 - Vosk Android app (STT) aka vadb
 - Termux Python server (GPT + TTS + IoT gateway)
+
+install figlet first :3 then espeak
+```bash
+pkg install figlet && espeak
+```
+or espeak-ng for modern speak. what? :/
+you can use gtts, or any. yk its opensource what do i even care.
+```bash
+pkg install espeak-ng
+```
 
 ### ESP32
 - attached module like relay, sensor and importand being. max98357A
@@ -74,7 +78,7 @@ termux-chroot  # optional
 
 ---
 
-## Step 2: Python Flask AI Server
+## Python Flask AI Server
 
 ```python
 from flask import Flask, request
