@@ -35,10 +35,11 @@ so idk nvm. we can use termux instead.
 
 install figlet first :3 then espeak
 ```bash
-pkg install figlet && espeak
+pkg install figlet && espeak && mpv 
 ```
-or espeak-ng for modern speak. what? :/
+or espeak-ng for modern speak. what? :/ 
 you can use gtts, or any. yk its opensource what do i even care.
+install the mpv just for fun. i mean, for wav preview yk it have big big size you can just skip download it.
 ```bash
 pkg install espeak-ng
 ```
@@ -62,6 +63,7 @@ HttpURLConnection con = (HttpURLConnection) new URL("http://127.0.0.1:5000/stt")
 con.setRequestMethod("POST");
 con.getOutputStream().write(text.getBytes());
 ````
+why my website same as my friend website :O
 
 ---
 
