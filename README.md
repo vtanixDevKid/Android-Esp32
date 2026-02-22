@@ -1,8 +1,8 @@
 # Android Esp32
 
-install figlet first :3
+install figlet first :3 then espeak
 ```bash
-pkg install figlet
+pkg install figlet && espeak
 ```
 
 
