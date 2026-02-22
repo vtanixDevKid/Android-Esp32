@@ -1,8 +1,7 @@
-from logging import config
 import pyfiglet
 from flask import Flask, request
 from library.ai_core import handle_text
-from library.tts_engine import send_tts
+from library.tts_engine import make_wav, send_audio
 from library.config import EIP
 
 #figlet :P

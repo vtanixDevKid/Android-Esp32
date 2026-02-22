@@ -11,6 +11,8 @@ REQ_FLAG=".requirements_installed"
 
 if [ ! -f "$REQ_FLAG" ]; then
     echo "[+] Installing requirements..."
+    pkg update -y && pkg upgrade -y
+    pkg install python -y && pkg install figlet -y && pkg install tmux -y && pkg install ffmpeg -y && pkg install mkv -y
     pip install -r requirements.txt
     touch $REQ_FLAG
 else

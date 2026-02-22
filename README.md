@@ -56,6 +56,11 @@ pip install -r requirements.txt
 
 Mic → Vadb → Final text → HTTP POST ke Termux server
 
+### ah this is shit all make one work fr now
+```code
+Python gTTS → ffmpeg convert PCM → HTTP chunk stream → ESP32 → I2S DAC
+```
+
 ### Example Java Code (pseudo)
 
 ```java
@@ -168,13 +173,39 @@ if(cmd == "LIGHT=ON") digitalWrite(RELAY, HIGH);
 # CHANNEL B - AUDIO
 
 ```python
-import requests
+from gtts import gTTS
+import requests, os
+import library.config as config
+import subprocess
 
-with open("out.wav", "rb") as f:
-    requests.post("http://esp32-ip/play", data=f)
+def speak_stream(text):
+    eip = config.EIP
+    if not eip:
+        print("ESP32 IP not set")
+        return
+    tts = gTTS(text=text, lang="en")
+    tts.save("temp.mp3")
 
-then
-os.remove("out.wav")
+    # ffmpeg convert mp3 to raw PCM stream
+    cmd = [
+        "ffmpeg", "-i", "temp.mp3",
+        "-f", "s16le",
+        "-ac", "1",
+        "-ar", "22050",
+        "-"
+    ]
+
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+    def gen():
+        while True:
+            chunk = p.stdout.read(1024)
+            if not chunk:
+                break
+            yield chunk
+
+    requests.post(f"http://{eip}/audio", data=gen())
+speak_stream("Hello house slave")
 ```
 
 so out.wav will instatly remove after being called.
@@ -286,6 +317,60 @@ tmux send-keys "python monitor.py" C-m
 
 tmux attach -t ai
 ```
+
+## And finnaly, the esp32 code
+example code, use for reference only
+```C
+#include <WiFi.h>
+#include <WebServer.h>
+#include "driver/i2s.h"
+
+WebServer server(80);
+
+void setup_i2s() {
+  i2s_config_t cfg = {
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+    .sample_rate = 22050,
+    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .communication_format = I2S_COMM_FORMAT_I2S,
+    .dma_buf_count = 16,
+    .dma_buf_len = 1024
+  };
+  i2s_driver_install(I2S_NUM_0, &cfg, 0, NULL);
+}
+
+void handleAudio() {
+  WiFiClient client = server.client();
+  uint8_t buf[1024];
+  size_t len;
+
+  while (client.connected()) {
+    len = client.read(buf, sizeof(buf));
+    if (len <= 0) break;
+
+    size_t written;
+    i2s_write(I2S_NUM_0, buf, len, &written, portMAX_DELAY);
+  }
+}
+
+void setup() {
+  WiFi.begin("SSID", "PASS");
+  setup_i2s();
+
+  server.on("/audio", HTTP_POST, handleAudio);
+  server.begin();
+}
+```
+
+## Stupid conclusion
+| Method         | Complexity | Smooth    | Worth        |
+| -------------- | ---------- | --------- | ------------ |
+| BT A2DP        | 🟢 easy    | 🟢 smooth | 🟢 BEST      |
+| HTTP chunk PCM | 🔥 hard    | 🟡 ok     | 🧠 nerd flex |
+| Send WAV file  | bro 🥀💔 | 🔴 lag    | ❌            |
+
+### i said to chatgpt what is the best way to make ts and it told me that my way is stupid
 
 ---
 
