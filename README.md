@@ -1,4 +1,4 @@
-# Android Esp32
+    # Android Esp32
 
 ---
 
@@ -280,5 +280,5 @@ tmux attach -t ai
 
 ```
 
-Kalau mau, gw bisa bikin versi **lebih pro README (diagram ASCII workflow, badge, table of contents)** tapi tetap **tanpa ubah satu kata pun konten teknis lu**.
+im a kid and my main language wasnt english, so if my english look so bad dont blame me. hate this language, dont hate me.
 ```
