@@ -1,6 +1,5 @@
     # Android Esp32
 
----
 
 ````md
 # AI Home Assistant + ESP32 Voice Control Project
