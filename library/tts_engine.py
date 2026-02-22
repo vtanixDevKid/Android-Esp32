@@ -1,18 +1,33 @@
 from gtts import gTTS
-import requests, os
-from library.config import EIP
+import requests, os, subprocess
+import library.config as config
 
-def make_wav(text):
-    tts = gTTS(text=text, lang='en')
-    tts.save("reply.mp3")
+def speak_stream(text):
+    eip = config.EIP
+    if not eip:
+        print("ESP32 IP not set")
+        return
 
-    os.system("ffmpeg -i reply.mp3 -ar 22050 -ac 1 -sample_fmt s16 reply.wav")
-    return "reply.wav"
+    tts = gTTS(text=text, lang="en")
+    tts.save("temp.mp3")
 
-def send_audio():
-    eip = EIP
-    with open("reply.wav", "rb") as f:
-        requests.post(f"http://{eip}/audio", data=f)
-    os.remove("reply.mp3")
-    os.remove("reply.wav")
-    
+    cmd = [
+        "ffmpeg", "-fflags", "nobuffer", "-flags", "low_delay",
+        "-i", "temp.mp3",
+        "-f", "s16le", "-ac", "1", "-ar", "22050",
+        "-"
+    ]
+
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+    def gen():
+        while True:
+            chunk = p.stdout.read(4096)
+            if not chunk:
+                break
+            yield chunk
+
+    headers = {"Content-Type": "application/octet-stream"}
+    requests.post(f"http://{eip}/audio", data=gen(), headers=headers)
+
+    os.remove("temp.mp3")

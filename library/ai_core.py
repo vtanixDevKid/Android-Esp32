@@ -1,8 +1,7 @@
-from library.tts_engine import speak
+from library.tts_engine import make_wav, send_audio
 from library.esp32_gateway import send_cmd
 
 def ask_ai(text):
-    # TODO: OpenAI API
     return """SPEECH: Lamp turned on.
 CMD:LIGHT=ON"""
 
@@ -17,7 +16,8 @@ def handle_text(text):
         if line.startswith("CMD:"):
             cmds.append(line[4:].strip())
 
-    speak(speech)
+    wav_file = make_wav(speech)
+    send_audio(wav_file)
 
     for c in cmds:
         send_cmd(c)
