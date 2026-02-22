@@ -275,5 +275,6 @@ tmux attach -t ai
 
 ```
 
-im a kid and my main language wasnt english, so if my english look so bad dont blame me. hate this language, dont hate me.
+this all not done yet.
+im a kid and my main language wasnt even english, so if my english look so bad dont blame me. hate this language, but dont hate me.
 ```
