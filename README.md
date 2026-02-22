@@ -1,5 +1,11 @@
 # Android Esp32
 
+install figlet first :3
+```bash
+pkg install figlet
+```
+
+
 so, my target is making an app with connection to esp32 http recieve from http post to control other module that attach to esp32.
 
 ## Objective
