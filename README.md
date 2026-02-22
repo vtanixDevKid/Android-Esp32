@@ -1,8 +1,4 @@
-    # Android Esp32
-
-
-````md
-# AI Home Assistant + ESP32 Voice Control Project
+# Android Esp32
 
 so, my target is making an app with connection to esp32 http recieve from http post to control other module that attach to esp32.
 
