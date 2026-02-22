@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#bored sh
 termux-wake-lock
 tmux new-session -d -s ai
 
