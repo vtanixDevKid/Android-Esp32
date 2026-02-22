@@ -1,5 +1,16 @@
+import pyfiglet
 from flask import Flask, request
-from ai_core import handle_text
+from library.ai_core import handle_text
+from library.tts_engine import send_tts
+
+#figlet :P
+figlet.setFont(font='larry3')
+title = pyfiglet.figlet_format("ANDRO32")
+print(title)
+print("")
+
+eip = input("Enter ESP32 IP: ")
+print("")
 
 app = Flask(__name__)
 
