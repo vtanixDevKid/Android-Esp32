@@ -1,6 +1,7 @@
 import pyttsx3, requests, os
 
-engine = pyttsx3.init()
+os.environ["PATH"] += ":/data/data/com.termux/files/usr/bin"
+engine = pyttsx3.init(driverName="espeak")
 
 def speak(text):
     print("AI:", text)

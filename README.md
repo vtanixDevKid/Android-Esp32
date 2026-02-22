@@ -42,6 +42,10 @@ you can use gtts, or any. yk its opensource what do i even care.
 ```bash
 pkg install espeak-ng
 ```
+nevermind dont use espeak or espeak-ng why do we need offline tts , using ai wasnt even offline. just install the requirement i alaready included gtts there
+```bash
+pip install -r requirements.txt
+```
 
 ### ESP32
 - attached module like relay, sensor and importand being. max98357A
