@@ -1,22 +1,14 @@
 import pyfiglet
 from flask import Flask, request
+import library.config as config
 from library.ai_core import handle_text
-from library.tts_engine import make_wav, send_audio
-from library.config import EIP
 
-#figlet :P
-figlet.setFont(font='larry3')
-title = pyfiglet.figlet_format("ANDRO32")
-print(title)
-print("")
-
+figlet = pyfiglet.Figlet(font='larry3')
+print(figlet.renderText("ANDRO32"))
 
 eip = input("Enter ESP32 IP: ")
-print("")
-
-def update_ip():
-    config.EIP = eip
-    print("ESP32 IP set to:", eip)
+config.EIP = eip
+print("ESP32 IP set to:", eip)
 
 app = Flask(__name__)
 

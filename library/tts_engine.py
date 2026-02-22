@@ -12,22 +12,30 @@ def speak_stream(text):
     tts.save("temp.mp3")
 
     cmd = [
-        "ffmpeg", "-fflags", "nobuffer", "-flags", "low_delay",
+        "ffmpeg", "-loglevel", "quiet",
         "-i", "temp.mp3",
         "-f", "s16le", "-ac", "1", "-ar", "22050",
         "-"
     ]
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
     def gen():
         while True:
+            if p.poll() is not None:
+                break
             chunk = p.stdout.read(4096)
             if not chunk:
                 break
             yield chunk
 
-    headers = {"Content-Type": "application/octet-stream"}
-    requests.post(f"http://{eip}/audio", data=gen(), headers=headers)
-
-    os.remove("temp.mp3")
+    try:
+        requests.post(
+            f"http://{eip}/audio",
+            data=gen(),
+            headers={"Content-Type": "application/octet-stream"},
+            timeout=10
+        )
+    finally:
+        p.kill()
+        os.remove("temp.mp3")
