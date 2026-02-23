@@ -1,5 +1,33 @@
+## monitorNonRoot.py
+```python
+import sys, os
+import pyfiglet
+
+fig = pyfiglet.Figlet(font='slant')
+
+print(fig.renderText('ESP32 Monitor'))
+print("")
+print("before use make sure you run the following command under:")
+print("termux-usb -l                        # to see the list of connected USB devices")
+print("termux-usb -r /dev/bus/usb/001/00n   # to request access to the device")
+
+fd = int(sys.argv[1])
+f = os.fdopen(fd, 'rb+', buffering=0)
+
+print("--- connected to ESP32 ---")
+try:
+    while True:
+        data = f.read(64)  # read up to 64 bytes from the device
+        if data:
+            print(data.decode('utf-8', errors='ignore'), end='')
+except KeyboardInterrupt:
+    print("\nStopping...")
+    f.close()
+```
+
 ## server.py
 ```python
+
 import pyfiglet
 from flask import Flask, request
 import library.config as config
@@ -9,7 +37,7 @@ from library.esp32_gateway import connect_bt
 figlet = pyfiglet.Figlet(font='larry3')
 print(figlet.renderText("ANDRO32"))
 
-connect_bt() 
+connect_bt()
 
 eip = input("Enter ESP32 IP: ")
 config.EIP = eip
@@ -26,13 +54,8 @@ def stt():
 
 app.run(host="0.0.0.0", port=5000)
 ```
-## config.py
-```python
-EIP = None
-```
-
 ## ai_core.py
-```python
+```py
 from library.tts_engine import speak_stream
 from library.esp32_gateway import send_cmd
 
@@ -61,9 +84,41 @@ def handle_text(text):
     if speech:
         speak_stream(speech)
 ```
+## config.py
+```py
+EIP = None
+```
 
+## esp32_gateway.py
+```py
+import serial
+
+ser = None
+
+def connect_bt():
+    global ser
+    try:
+        ser = serial.Serial("/dev/rfcomm0", 115200, timeout=1)
+        print("BT connected")
+    except Exception as e:
+        print("BT not connected:", e)
+        ser = None
+
+def send_cmd(cmd):
+    global ser
+    if ser is None:
+        print("BT not ready, skipping CMD:", cmd)
+        return
+
+    try:
+        ser.write((cmd + "\n").encode())
+        print("CMD -> ESP32:", cmd)
+    except Exception as e:
+        print("BT send failed:", e)
+        ser = None
+```
 ## tts_engine.py
-```python
+```py
 from gtts import gTTS
 import requests, os, subprocess
 import library.config as config
@@ -106,32 +161,8 @@ def speak_stream(text):
         p.kill()
         os.remove("temp.mp3")
 ```
-
-## esp32_gateway.py
-```python
-import serial
-
-ser = None
-
-def connect_bt():
-    global ser
-    try:
-        ser = serial.Serial("/dev/rfcomm0", 115200, timeout=1)
-        print("BT connected")
-    except Exception as e:
-        print("BT not connected:", e)
-        ser = None
-
-def send_cmd(cmd):
-    global ser
-    if ser is None:
-        print("BT not ready, skipping CMD:", cmd)
-        return
-
-    try:
-        ser.write((cmd + "\n").encode())
-        print("CMD -> ESP32:", cmd)
-    except Exception as e:
-        print("BT send failed:", e)
-        ser = None
+## __init__.py
+```py
+#what do you seek here lol, this is just __init__.py .
+#dont tell me you dont know what __init__.py is for lol.
 ```
