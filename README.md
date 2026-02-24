@@ -1,5 +1,5 @@
 # Android Esp32
-![Demo screenshot](./images/61VW51ZWmnL.jpg)
+<img src="./images/61VW51ZWmnL.jpg" alt="Demo screenshot" width="400" align="center>
 
 so, my target is making an app with connection to esp32 http recieve from http post to control other module that attach to esp32.
 
