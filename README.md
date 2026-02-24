@@ -77,9 +77,8 @@ why my website same as my friend website :O
 ## Step 1: Install packages
 
 ```bash
-pkg update
-pkg install python git ffmpeg
-pip install openai pyttsx3 flask requests pyserial
+chmod +x start.sh
+bash start.h
 ```
 
 ```bash
@@ -89,46 +88,6 @@ termux-chroot  # optional
 
 ---
 
-## Python Flask AI Server
-
-```python
-from flask import Flask, request
-import openai
-import pyttsx3
-import os
-
-app = Flask(__name__)
-engine = pyttsx3.init()
-
-OPENAI_KEY = "YOUR_KEY"
-
-@app.route("/stt", methods=["POST"])
-def stt():
-    text = request.data.decode()
-    print("USER:", text)
-
-    # GPT
-    reply = ask_ai(text)
-
-    # TTS to wav
-    filename = "out.wav"
-    engine.save_to_file(reply, filename)
-    engine.runAndWait()
-
-    # TODO send wav + cmd to ESP32
-    send_to_esp(reply, filename)
-
-    return "OK"
-
-def ask_ai(text):
-    # use openai python sdk or raw HTTP
-    return "dummy reply for now"
-
-def send_to_esp(reply, wavfile):
-    pass
-
-app.run(host="0.0.0.0", port=5000)
-```
 
 ---
 
@@ -362,6 +321,7 @@ void setup() {
   server.begin();
 }
 ```
+### the esp32 code above is suck, ill try to make the fix one
 
 ## Stupid conclusion
 | Method         | Complexity | Smooth    | Worth        |
