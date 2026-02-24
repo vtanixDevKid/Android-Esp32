@@ -1,5 +1,5 @@
 # Android Esp32
-<div style="text-align: center;">
+<div style="align: center;">
     <img src="./images/61VW51ZWmnL.jpg" alt="Demo screenshot" 
          style="max-width: 50%; height: 300px; display: block; margin: 0 auto;" />
 </div>
