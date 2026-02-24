@@ -1,25 +1,15 @@
-import serial
-
-ser = None
-
-def connect_bt():
-    global ser
-    try:
-        ser = serial.Serial("/dev/rfcomm0", 115200, timeout=1)
-        print("BT connected")
-    except Exception as e:
-        print("BT not connected:", e)
-        ser = None
+import requests
+import library.config as config
 
 def send_cmd(cmd):
-    global ser
-    if ser is None:
-        print("BT not ready, skipping CMD:", cmd)
+    eip = config.EIP
+    if not eip:
+        print("ESP32 IP not set, skipping CMD:", cmd)
         return
 
     try:
-        ser.write((cmd + "\n").encode())
-        print("CMD -> ESP32:", cmd)
+        url = f"http://{eip}/cmd"
+        r = requests.get(url, params={"cmd": cmd}, timeout=3)
+        print("CMD -> ESP32:", cmd, "RESP:", r.text)
     except Exception as e:
-        print("BT send failed:", e)
-        ser = None
+        print("WiFi send failed:", e)

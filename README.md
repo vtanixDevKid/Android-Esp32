@@ -114,61 +114,7 @@ python server.py
 
 ## Python
 
-```python
-import serial
-
-ser = serial.Serial("/dev/rfcomm0", 115200)
-
-def send_cmd(cmd):
-    ser.write((cmd + "\n").encode())
-```
-
-## ESP32 C
-
-```c
-String cmd = Serial.readStringUntil('\n');
-if(cmd == "LIGHT=ON") digitalWrite(RELAY, HIGH);
-```
-
----
-
-# CHANNEL B - AUDIO
-
-```python
-from gtts import gTTS
-import requests, os
-import library.config as config
-import subprocess
-
-def speak_stream(text):
-    eip = config.EIP
-    if not eip:
-        print("ESP32 IP not set")
-        return
-    tts = gTTS(text=text, lang="en")
-    tts.save("temp.mp3")
-
-    # ffmpeg convert mp3 to raw PCM stream
-    cmd = [
-        "ffmpeg", "-i", "temp.mp3",
-        "-f", "s16le",
-        "-ac", "1",
-        "-ar", "22050",
-        "-"
-    ]
-
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-
-    def gen():
-        while True:
-            chunk = p.stdout.read(1024)
-            if not chunk:
-                break
-            yield chunk
-
-    requests.post(f"http://{eip}/audio", data=gen())
-speak_stream("Hello house slave")
-```
+### just read all code in allCode.md located on /logs/allCode.md eh?
 
 so out.wav will instatly remove after being called.
 

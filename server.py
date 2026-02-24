@@ -2,12 +2,9 @@ import pyfiglet
 from flask import Flask, request
 import library.config as config
 from library.ai_core import handle_text
-from library.esp32_gateway import connect_bt
 
-figlet = pyfiglet.Figlet(font='larry3')
+figlet = pyfiglet.Figlet(font='larry3d')
 print(figlet.renderText("ANDRO32"))
-
-connect_bt() 
 
 eip = input("Enter ESP32 IP: ")
 config.EIP = eip

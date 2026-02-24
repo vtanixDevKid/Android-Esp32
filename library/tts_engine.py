@@ -22,8 +22,6 @@ def speak_stream(text):
 
     def gen():
         while True:
-            if p.poll() is not None:
-                break
             chunk = p.stdout.read(4096)
             if not chunk:
                 break
@@ -34,8 +32,11 @@ def speak_stream(text):
             f"http://{eip}/audio",
             data=gen(),
             headers={"Content-Type": "application/octet-stream"},
-            timeout=10
+            timeout=20
         )
+    except Exception as e:
+        print("Audio stream failed:", e)
     finally:
         p.kill()
-        os.remove("temp.mp3")
+        if os.path.exists("temp.mp3"):
+            os.remove("temp.mp3")
