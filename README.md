@@ -1,6 +1,7 @@
 # Android Esp32
 <div style="text-align: center;">
-    <img src="./images/61VW51ZWmnL.jpg" alt="Demo screenshot" width=100px height=100px style="display: block; margin: 0 auto; />
+    <img src="./images/61VW51ZWmnL.jpg" alt="Demo screenshot" width=400px height=400px style="display: block; margin: 0 auto;" />
+    <p></p>
 </div>
 
 so, my target is making an app with connection to esp32 http recieve from http post to control other module that attach to esp32.
