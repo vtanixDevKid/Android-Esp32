@@ -1,5 +1,4 @@
 echo "testing sound.."
-
-curl http://192.168.4.1/status
+echo ""
 
 python library/test_sound.py
