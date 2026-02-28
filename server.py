@@ -1,4 +1,5 @@
 import pyfiglet
+import threading
 from flask import Flask, request
 import library.config as config
 from library.ai_core import handle_text
@@ -16,7 +17,8 @@ app = Flask(__name__)
 def stt():
     text = request.data.decode()
     print("STT:", text)
-    handle_text(text)
+    t = threading.Thread(target=handle_text, args=(text,))
+    t.start()
     return "OK"
 
 app.run(host="0.0.0.0", port=5000)
