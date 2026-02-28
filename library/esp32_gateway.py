@@ -1,5 +1,5 @@
 import requests
-import library.config as config
+import config as config
 
 def send_cmd(cmd):
     eip = config.EIP

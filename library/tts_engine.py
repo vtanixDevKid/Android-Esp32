@@ -1,7 +1,7 @@
 from gtts import gTTS
 import uuid
 import requests, os, subprocess
-import library.config as config
+import config as config
 
 def speak_stream(text):
     eip = config.EIP
