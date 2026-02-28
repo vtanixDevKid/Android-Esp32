@@ -25,20 +25,26 @@ except KeyboardInterrupt:
     f.close()
 ```
 
+## test_sound.py
+```py
+import config as config
+from tts_engine import speak_stream
+
+ipe = input("insert esp32 ip : ")
+config.EIP = ipe
+speak_stream("Testing audio connection to E S P thirty two")
+```
+
 ## server.py
 ```python
-
 import pyfiglet
 import threading
 from flask import Flask, request
 import library.config as config
 from library.ai_core import handle_text
-from library.esp32_gateway import connect_bt
 
-figlet = pyfiglet.Figlet(font='larry3')
+figlet = pyfiglet.Figlet(font='larry3d')
 print(figlet.renderText("ANDRO32"))
-
-connect_bt()
 
 eip = input("Enter ESP32 IP: ")
 config.EIP = eip
@@ -50,8 +56,10 @@ app = Flask(__name__)
 def stt():
     text = request.data.decode()
     print("STT:", text)
+
     t = threading.Thread(target=handle_text, args=(text,))
     t.start()
+    
     return "OK"
 
 app.run(host="0.0.0.0", port=5000)
@@ -94,7 +102,7 @@ EIP = None
 ## esp32_gateway.py
 ```py
 import requests
-import library.config as config
+import config as config
 
 def send_cmd(cmd):
     eip = config.EIP
@@ -112,8 +120,12 @@ def send_cmd(cmd):
 ## tts_engine.py
 ```py
 from gtts import gTTS
-import requests, os, subprocess
-import library.config as config
+import uuid
+import requests
+import os
+import subprocess
+import config as config
+
 
 def speak_stream(text):
     eip = config.EIP
@@ -121,37 +133,47 @@ def speak_stream(text):
         print("ESP32 IP not set")
         return
 
+    # 1. Generate MP3 dari gTTS
     tts = gTTS(text=text, lang="en")
-    tts.save("temp.mp3")
+    filename = f"temp_{uuid.uuid4().hex}.mp3"
+    tts.save(filename)
 
+    # 2. Convert ke raw PCM 16bit mono 22050 Hz
     cmd = [
         "ffmpeg", "-loglevel", "quiet",
-        "-i", "temp.mp3",
-        "-f", "s16le", "-ac", "1", "-ar", "22050",
+        "-i", filename,
+        "-f", "s16le",
+        "-ac", "1",
+        "-ar", "22050",
         "-"
     ]
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-
-    def gen():
-        while True:
-            if p.poll() is not None:
-                break
-            chunk = p.stdout.read(4096)
-            if not chunk:
-                break
-            yield chunk
-
     try:
-        requests.post(
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+
+        # 3. Buffer seluruh output jadi satu blob
+        audio_bytes = p.stdout.read()
+        p.wait()
+
+        print("Sending bytes:", len(audio_bytes))
+
+        # 4. Kirim ke ESP dengan Content-Length otomatis
+        response = requests.post(
             f"http://{eip}/audio",
-            data=gen(),
+            data=audio_bytes,
             headers={"Content-Type": "application/octet-stream"},
-            timeout=10
+            timeout=None
         )
+
+        print("STATUS:", response.status_code)
+        print("BODY:", response.text)
+
+    except Exception as e:
+        print("Audio stream failed:", e)
+
     finally:
-        p.kill()
-        os.remove("temp.mp3")
+        if os.path.exists(filename):
+            os.remove(filename)
 ```
 ## __init__.py
 ```py
@@ -270,6 +292,150 @@ void setup() {
 
 void loop() {
   server.handleClient();
-  delay(2); // stabilitas mDNS & webserver
+  delay(2); // stabilitas mDNS & webserver#include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#include <driver/i2s.h>
+
+// ================= WIFI STA SETTINGS =================
+const char* ssid = "Yenni";
+const char* pass = "masterliem";
+
+// ================= PIN =================
+#define LED_PINR 23
+#define LED_PINB 2  // LED indikator WiFi
+#define I2S_BCLK 26
+#define I2S_LRC  27
+#define I2S_DOUT 19
+#define I2S_SD   21
+
+WebServer server(80);
+
+// ================= I2S SETUP =================
+void setupI2S() {
+  i2s_config_t i2s_config = {
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+    .sample_rate = 22050,
+    .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+    .intr_alloc_flags = 0,
+    .dma_buf_count = 8,
+    .dma_buf_len = 512,
+    .use_apll = false,
+    .tx_desc_auto_clear = true,
+    .fixed_mclk = 0
+  };
+
+  i2s_pin_config_t pin_config = {
+    .bck_io_num = I2S_BCLK,
+    .ws_io_num = I2S_LRC,
+    .data_out_num = I2S_DOUT,
+    .data_in_num = I2S_PIN_NO_CHANGE
+  };
+
+  i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
+  i2s_set_pin(I2S_NUM_0, &pin_config);
+  i2s_zero_dma_buffer(I2S_NUM_0);
+}
+
+// ================= HANDLERS =================
+void handleCmd() {
+  String cmd = server.arg("cmd");
+  if (cmd == "LIGHT=ON") {
+    digitalWrite(LED_PINR, HIGH);
+    Serial.println("CMD: LED RED ON");
+  } else if (cmd == "LIGHT=OFF") {
+    digitalWrite(LED_PINR, LOW);
+    Serial.println("CMD: LED RED OFF");
+  }
+  server.send(200, "text/plain", "OK");
+}
+
+// SAFE AUDIO STREAM WITH DEBUG
+void handleAudio() {
+    WiFiClient client = server.client();
+    const size_t bufSize = 1024;
+    uint8_t buffer[bufSize];
+
+    unsigned long start = millis();
+    while (client.connected()) {
+        while (client.available()) {
+            int len = client.read(buffer, bufSize);
+            if (len > 0) {
+                size_t written;
+                i2s_write(I2S_NUM_0, buffer, len, &written, portMAX_DELAY);
+            }
+        }
+        // Kalau nggak ada data baru selama 5 detik, anggap streaming selesai
+        if (millis() - start > 5000) break;
+        yield();
+    }
+    server.send(200, "text/plain", "Finished");
+}
+
+void handleStatus() {
+  String s = "ESP32 STA OK\nIP: " + WiFi.localIP().toString();
+  server.send(200, "text/plain", s);
+}
+
+// ================= SETUP =================
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PINB, OUTPUT);
+  pinMode(LED_PINR, OUTPUT);
+  pinMode(I2S_SD, OUTPUT);
+  digitalWrite(I2S_SD, HIGH); // Enable amplifier
+
+  // WiFi STA connect
+  WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, pass);
+
+    Serial.print("Connecting to WiFi");
+    unsigned long startAttemptTime = millis();
+    const unsigned long timeout = 30000; // 30 detik max
+
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < timeout) {
+        digitalWrite(LED_PINB, !digitalRead(LED_PINB)); // kedip LED
+        delay(250);
+        Serial.print(".");
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        digitalWrite(LED_PINB, LOW); // LED LOW \connect
+        Serial.println("\nWiFi Connected!");
+        Serial.print("IP: "); Serial.println(WiFi.localIP());
+    } else {
+        Serial.println("\nWiFi Connection Failed!");
+        while(1) { 
+            digitalWrite(LED_PINB, !digitalRead(LED_PINB));
+            delay(100);
+        }
+    }
+
+  if (MDNS.begin("andro32")) {
+    Serial.println("mDNS: http://andro32.local");
+  }
+
+  setupI2S();
+
+  // Collect header
+  const char* headerkeys[] = {"Content-Length"};
+  server.collectHeaders(headerkeys, 1);
+
+  // Routes
+  server.on("/cmd", handleCmd);
+  server.on("/audio", HTTP_POST, handleAudio);
+  server.on("/status", handleStatus);
+
+  server.begin();
+  Serial.println("HTTP Server started");
+}
+
+// ================= LOOP =================
+void loop() {
+  server.handleClient();
+  // Delay minimal agar stream lancar
+}
 }
 ```
