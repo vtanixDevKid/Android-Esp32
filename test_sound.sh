@@ -15,8 +15,7 @@ cek() {
 }
 
 if cek "scan ip addreas?"; then
-    echo "scanning.."
-    echo ""
-else
     python ~/Android-Esp32/library/test_sound.py
+else
+    echo ""
 fi
