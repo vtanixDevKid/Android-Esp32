@@ -50,7 +50,6 @@ app = Flask(__name__)
 def stt():
     text = request.data.decode()
     print("STT:", text)
-    handle_text(text)
     t = threading.Thread(target=handle_text, args=(text,))
     t.start()
     return "OK"
@@ -95,17 +94,12 @@ EIP = None
 ## esp32_gateway.py
 ```py
 import requests
-import threading
 import library.config as config
 
-lock = threading.lock()
-
 def send_cmd(cmd):
-    with lock:
-        ser.write((cmd + "\n").encode())
     eip = config.EIP
     if not eip:
-        print("ESP32 IP not set, skipping CMD:", cmd)
+        print("ESP32 IP not set")
         return
 
     try:

@@ -1,4 +1,5 @@
 from gtts import gTTS
+import uuid
 import requests, os, subprocess
 import library.config as config
 
@@ -9,11 +10,12 @@ def speak_stream(text):
         return
 
     tts = gTTS(text=text, lang="en")
-    tts.save("temp.mp3")
+    filename = f"temp_{uuid.uuid4().hex}.mp3"
+    tts.save(filename)
 
     cmd = [
         "ffmpeg", "-loglevel", "quiet",
-        "-i", "temp.mp3",
+        "-i", filename,
         "-f", "s16le", "-ac", "1", "-ar", "22050",
         "-"
     ]
@@ -38,5 +40,5 @@ def speak_stream(text):
         print("Audio stream failed:", e)
     finally:
         p.kill()
-        if os.path.exists("temp.mp3"):
-            os.remove("temp.mp3")
+        if os.path.exists(filename):
+            os.remove(filename)
