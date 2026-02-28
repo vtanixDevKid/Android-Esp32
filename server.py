@@ -17,8 +17,10 @@ app = Flask(__name__)
 def stt():
     text = request.data.decode()
     print("STT:", text)
+
     t = threading.Thread(target=handle_text, args=(text,))
     t.start()
+    
     return "OK"
 
 app.run(host="0.0.0.0", port=5000)
