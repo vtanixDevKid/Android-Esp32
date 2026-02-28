@@ -1,5 +1,5 @@
-import library.config as config
-from library.tts_engine import speak_stream
+import config as config
+from tts_engine import speak_stream
 
 ipe = input("insert esp32 ip : ")
 config.EIP = ipe
