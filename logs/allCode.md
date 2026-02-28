@@ -29,6 +29,7 @@ except KeyboardInterrupt:
 ```python
 
 import pyfiglet
+import threading
 from flask import Flask, request
 import library.config as config
 from library.ai_core import handle_text
@@ -50,6 +51,8 @@ def stt():
     text = request.data.decode()
     print("STT:", text)
     handle_text(text)
+    t = threading.Thread(target=handle_text, args=(text,))
+    t.start()
     return "OK"
 
 app.run(host="0.0.0.0", port=5000)
@@ -91,31 +94,26 @@ EIP = None
 
 ## esp32_gateway.py
 ```py
-import serial
+import requests
+import threading
+import library.config as config
 
-ser = None
-
-def connect_bt():
-    global ser
-    try:
-        ser = serial.Serial("/dev/rfcomm0", 115200, timeout=1)
-        print("BT connected")
-    except Exception as e:
-        print("BT not connected:", e)
-        ser = None
+lock = threading.lock()
 
 def send_cmd(cmd):
-    global ser
-    if ser is None:
-        print("BT not ready, skipping CMD:", cmd)
+    with lock:
+        ser.write((cmd + "\n").encode())
+    eip = config.EIP
+    if not eip:
+        print("ESP32 IP not set, skipping CMD:", cmd)
         return
 
     try:
-        ser.write((cmd + "\n").encode())
-        print("CMD -> ESP32:", cmd)
+        url = f"http://{eip}/cmd"
+        r = requests.get(url, params={"cmd": cmd}, timeout=3)
+        print("CMD -> ESP32:", cmd, "RESP:", r.text)
     except Exception as e:
-        print("BT send failed:", e)
-        ser = None
+        print("WiFi send failed:", e)
 ```
 ## tts_engine.py
 ```py
