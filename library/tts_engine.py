@@ -42,3 +42,7 @@ def speak_stream(text):
         p.kill()
         if os.path.exists(filename):
             os.remove(filename)
+            
+    response = requests.post(...)
+    print("STATUS:", response.status_code)
+    print("BODY:", response.text)
