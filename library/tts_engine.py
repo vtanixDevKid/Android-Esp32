@@ -1,54 +1,73 @@
+import config as config
 from gtts import gTTS
 import uuid
 import requests
 import os
 import subprocess
-import config as config
-
+import traceback
+import time
+import pyfiglet
 
 def speak_stream(text):
     eip = config.EIP
     if not eip:
-        print("ESP32 IP not set")
+        print("[ERR] ESP32 IP not set")
         return
 
-    # 1. Generate MP3 dari gTTS
+    print("[INFO] Generating TTS...")
     tts = gTTS(text=text, lang="en")
     filename = f"temp_{uuid.uuid4().hex}.mp3"
     tts.save(filename)
-
-    # 2. Convert ke raw PCM 16bit mono 22050 Hz
-    cmd = [
-        "ffmpeg", "-loglevel", "quiet",
-        "-i", filename,
-        "-f", "s16le",
-        "-ac", "1",
-        "-ar", "22050",
-        "-"
-    ]
-
-
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-
-    def audio_generator():
-        chunk_size = 1024
-        while True:
-            chunk = p.stdout.read(chunk_size)
-            if not chunk:
-                break
-            yield chunk
-        p.wait()
+    print("[INFO] MP3 saved:", filename)
 
     try:
+        print("[INFO] Converting to raw PCM via ffmpeg...")
+        cmd = [
+            "ffmpeg", "-loglevel", "error",
+            "-i", filename,
+            "-f", "s16le",
+            "-ac", "1",
+            "-ar", "22050",
+            "-"
+        ]
+
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        raw_audio, stderr = p.communicate()
+
+        if p.returncode != 0:
+            print("[ERR] ffmpeg failed:", stderr.decode())
+            return
+
+        print(f"[INFO] Raw audio size: {len(raw_audio)} bytes")
+
+        url = f"http://{eip}/audio"
+        print("[INFO] Sending to:", url)
+
+        # ✅ Kirim pakai generator chunks biar ESP32 tidak kewalahan
+        CHUNK_SIZE = 4096
+
+        def audio_chunks(data, chunk_size):
+            for i in range(0, len(data), chunk_size):
+                yield data[i:i + chunk_size]
+
         response = requests.post(
-            f"http://{eip}/audio",
-            data=audio_generator(),
-            headers={"Content-Type": "application/octet-stream"},
-            timeout=30
+            url,
+            data=audio_chunks(raw_audio, CHUNK_SIZE),
+            headers={
+                "Content-Type": "application/octet-stream",
+                "Transfer-Encoding": "chunked"
+            },
+            timeout=60
         )
-        print("Stream finished. Status:", response.status_code)
+
+        print("[INFO] Status:", response.status_code)
+        print("[INFO] Response:", response.text)
+
     except Exception as e:
-        print("Audio streaming failed:", e)
+        print("[ERR] Audio streaming failed:", e)
+        traceback.print_exc()
+
     finally:
         if os.path.exists(filename):
             os.remove(filename)
+            print("[INFO] Temp file removed")
