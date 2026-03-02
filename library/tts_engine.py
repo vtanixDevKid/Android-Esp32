@@ -2,13 +2,14 @@ import config as config
 from gtts import gTTS
 import uuid
 import requests
+import socket
 import os
 import subprocess
 import traceback
 import time
 
-CHUNK_SIZE = 4096  # 4KB per chunk — aman untuk RAM ESP32
 SAMPLE_RATE = 16000
+CHUNK_SIZE  = 512   # samakan dengan buf ESP32
 
 def speak_stream(text):
     eip = config.EIP
@@ -16,7 +17,6 @@ def speak_stream(text):
         print("[ERR] ESP32 IP not set")
         return
 
-    base_url = f"http://{eip}"
     filename = f"temp_{uuid.uuid4().hex}.mp3"
 
     try:
@@ -24,7 +24,6 @@ def speak_stream(text):
         print("[INFO] Generating TTS...")
         tts = gTTS(text=text, lang="en")
         tts.save(filename)
-        print("[INFO] MP3 saved:", filename)
 
         # 2. Convert ke raw PCM
         print("[INFO] Converting via ffmpeg...")
@@ -40,43 +39,32 @@ def speak_stream(text):
         raw_audio, stderr = p.communicate()
 
         if p.returncode != 0:
-            print("[ERR] ffmpeg failed:", stderr.decode())
+            print("[ERR] ffmpeg:", stderr.decode())
             return
 
         print(f"[INFO] Raw audio: {len(raw_audio)} bytes")
 
-        # 3. Start stream
-        r = requests.post(f"{base_url}/audio/start", timeout=5)
-        if r.status_code != 200:
-            print("[ERR] Start failed:", r.text)
-            return
-        print("[INFO] Stream started")
+        # 3. Kirim via raw TCP port 81 — bukan HTTP
+        print(f"[INFO] Connecting to {eip}:81 ...")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((eip, 81))
+        sock.settimeout(10)
 
-        # 4. Kirim per chunk
-        total_chunks = (len(raw_audio) + CHUNK_SIZE - 1) // CHUNK_SIZE
-        for i in range(0, len(raw_audio), CHUNK_SIZE):
-            chunk = raw_audio[i:i + CHUNK_SIZE]
-            chunk_num = (i // CHUNK_SIZE) + 1
+        total = len(raw_audio)
+        sent  = 0
 
-            r = requests.post(
-                f"{base_url}/audio/chunk",
-                data=chunk,
-                headers={"Content-Type": "application/octet-stream"},
-                timeout=10
-            )
+        while sent < total:
+            chunk = raw_audio[sent:sent + CHUNK_SIZE]
+            sock.sendall(chunk)
+            sent += len(chunk)
+            print(f"[INFO] Sent {sent}/{total} bytes", end="\r")
 
-            if r.status_code != 200:
-                print(f"[ERR] Chunk {chunk_num} failed:", r.text)
-                break
-
-            print(f"[INFO] Chunk {chunk_num}/{total_chunks} sent ({len(chunk)} bytes)")
-
-        # 5. End stream
-        requests.post(f"{base_url}/audio/end", timeout=5)
-        print("[INFO] Stream ended")
+        print(f"\n[INFO] All sent, closing...")
+        sock.close()
+        print("[INFO] Done")
 
     except Exception as e:
-        print("[ERR] speak_stream failed:", e)
+        print("[ERR]", e)
         traceback.print_exc()
 
     finally:
