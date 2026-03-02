@@ -8,7 +8,7 @@ import subprocess
 import traceback
 import time
 
-SAMPLE_RATE = 16000
+SAMPLE_RATE = 22050
 CHUNK_SIZE  = 512   # samakan dengan buf ESP32
 
 def speak_stream(text):
