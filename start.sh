@@ -1,4 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
+clear
+sleep 1
 figlet "Android ESP32"
 
 cd ~/ai_home
