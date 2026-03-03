@@ -1,7 +1,6 @@
 import config as config
 from gtts import gTTS
 import uuid
-import requests
 import socket
 import os
 import subprocess
@@ -9,7 +8,8 @@ import traceback
 import time
 
 SAMPLE_RATE = 22050
-CHUNK_SIZE  = 512   # samakan dengan buf ESP32
+CHUNK_SIZE  = 512
+CHUNK_DELAY = 0.005 # ms throttle per chunk
 
 def speak_stream(text):
     eip = config.EIP
@@ -25,7 +25,7 @@ def speak_stream(text):
         tts = gTTS(text=text, lang="en")
         tts.save(filename)
 
-        # 2. Convert ke raw PCM
+        # 2. Convert ke raw PCM via ffmpeg
         print("[INFO] Converting via ffmpeg...")
         cmd = [
             "ffmpeg", "-loglevel", "error",
@@ -44,11 +44,11 @@ def speak_stream(text):
 
         print(f"[INFO] Raw audio: {len(raw_audio)} bytes")
 
-        # 3. Kirim via raw TCP port 81 — bukan HTTP
+        # 3. Kirim via raw TCP port 81
         print(f"[INFO] Connecting to {eip}:81 ...")
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(30)
         sock.connect((eip, 81))
-        sock.settimeout(10)
 
         total = len(raw_audio)
         sent  = 0
@@ -57,6 +57,7 @@ def speak_stream(text):
             chunk = raw_audio[sent:sent + CHUNK_SIZE]
             sock.sendall(chunk)
             sent += len(chunk)
+            time.sleep(CHUNK_DELAY)  # throttle agar ESP32 DMA tidak overflow
             print(f"[INFO] Sent {sent}/{total} bytes", end="\r")
 
         print(f"\n[INFO] All sent, closing...")
@@ -69,5 +70,5 @@ def speak_stream(text):
 
     finally:
         if os.path.exists(filename):
-            os.remove(filename)
+            os.remove(filename) #if you want to hear the tts output directly, just remove this line
             print("[INFO] Temp file removed")

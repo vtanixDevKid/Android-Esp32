@@ -1,21 +1,30 @@
+import sys
 import config
 from tts_engine import speak_stream
 import pyfiglet
 
-uhhh = pyfiglet.figlet_format("TEST SOUND")
-print(uhhh)
+print(pyfiglet.figlet_format("TEST SOUND"))
 
-ipe = input("insert esp32 ip : ")
-config.EIP = ipe  # set dulu biar aman
+# Set IP ESP32
+config.EIP = input("Insert ESP32 IP: ")
 
-menu = int(input("want to use custom text? (1/0) : "))
-
-if menu == 1:
-    custom = input("insert custom speech : ")
+menu = input("Use custom text? (1/0): ").strip()
+if menu == "1":
+    custom = input("Insert custom speech: ")
     speak_stream(custom)
+elif menu == "0":
+    prompts = [
+        "one zero zero one two three four five six seven eight nine and ten",
+        "1 0 0 1 2 3 4 5 6 7 8 9 0",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "one zero zero one two three four five six seven eight nine and ten. 1 0 0 1 2 3 4 5 6 7 8 9 0.a b c d e f g h i j k l m n o p q r s t u v w x y z. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    ]
 
-elif menu == 0:
-    speak_stream("testing tts to e s p 32")
-
+    for idx, text in enumerate(prompts, 1):
+        print(f"\nTesting audio prompt {idx}")
+        speak_stream(text)
+        cont = input("Continue? (y/n): ").strip().lower()
+        if cont != "y":
+            sys.exit(0)
 else:
-    print("what are you talking about")
+    print("Invalid choice, exiting...")
