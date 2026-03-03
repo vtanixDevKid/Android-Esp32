@@ -1,20 +1,41 @@
 #!/bin/bash
 
-echo "Updating Android-Esp32 repo..."
-echo ""
+sleep 1
+clear
+REPO_DIR="$HOME/Android-Esp32"
+REPO_URL="https://github.com/vtanixDevKid/Android-Esp32"
 
-BASE_DIR="$HOME"
+echo "Checking for updates in Android-Esp32..."
+echo "--------------------------------------"
 
-REPO_DIR="$BASE_DIR/Android-Esp32"
+if [ -d "$REPO_DIR/.git" ]; then
+    echo "Folder ditemukan. Menarik update terbaru (git pull)..."
+    
+    cd "$REPO_DIR" || exit 1
+    
+    if git pull; then
+        echo ""
+        echo "Update sukses via git pull!"
+    else
+        echo "Gagal melakukan pull. Mencoba cara reset..."
+        git fetch --all
+        git reset --hard origin/main
+    fi
 
-if [ -d "$REPO_DIR" ]; then
-    echo "Removing old folder..."
+else
+    echo "Folder tidak ditemukan atau rusak. Melakukan clone ulang..."
+    
     rm -rf "$REPO_DIR"
+    
+    if git clone "$REPO_URL" "$REPO_DIR"; then
+        echo ""
+        echo "Clone selesai!"
+        cd "$REPO_DIR" || exit 1
+    else
+        echo "Gagal melakukan clone. Cek koneksi internet kamu."
+        exit 1
+    fi
 fi
-
-echo "Cloning repository..."
-git clone https://github.com/vtanixDevKid/Android-Esp32 "$REPO_DIR"
-
-cd "$REPO_DIR" || { echo "Failed to enter repo folder"; exit 1; }
-
-echo "Update complete!"
+echo "--------------------------------------"
+ls --color=auto
+sleep 1
