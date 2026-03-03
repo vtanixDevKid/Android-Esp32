@@ -13,7 +13,7 @@ if [ -d "$REPO_DIR" ]; then
 fi
 
 echo "Cloning repository..."
-git clone https://github.com/vtanixDevKid/Android-Esp32 "$REPO_DIR"
+git clone https://github.com/vtanixDevKid/Android-Esp32  "$REPO_DIR"
 
 cd "$REPO_DIR" || { echo "Failed to enter repo folder"; exit 1; }
 
