@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Konfigurasi lokasi
+sleep 1
+clear
 REPO_DIR="$HOME/Android-Esp32"
 REPO_URL="https://github.com/vtanixDevKid/Android-Esp32"
 
@@ -35,8 +36,6 @@ else
         exit 1
     fi
 fi
-
 echo "--------------------------------------"
-echo "$(pwd)"
-echo "Isi folder:"
 ls --color=auto
+sleep 1
