@@ -1,4 +1,4 @@
-import config as config
+import library.config as config
 from gtts import gTTS
 import uuid
 import socket
@@ -8,7 +8,7 @@ import traceback
 import time
 
 SAMPLE_RATE = 22050
-CHUNK_SIZE  = 512
+CHUNK_SIZE  = 1024
 CHUNK_DELAY = 0.005 # ms throttle per chunk
 
 def speak_stream(text):

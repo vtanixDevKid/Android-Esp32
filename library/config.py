@@ -1,1 +1,2 @@
 EIP = None
+GEMINI_API_KEY = ""

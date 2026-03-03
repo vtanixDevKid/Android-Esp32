@@ -1,5 +1,5 @@
 import requests
-import config as config
+import library.config as config
 
 def send_cmd(cmd):
     eip = config.EIP
@@ -10,6 +10,7 @@ def send_cmd(cmd):
     try:
         url = f"http://{eip}/cmd"
         r = requests.get(url, params={"cmd": cmd}, timeout=3)
+        print(url, "with", cmd )
         print("CMD -> ESP32:", cmd, "RESP:", r.text)
     except Exception as e:
         print("WiFi send failed:", e)
