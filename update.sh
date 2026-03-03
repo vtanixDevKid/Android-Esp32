@@ -1,11 +1,20 @@
-echo "updating..."
+#!/bin/bash
+
+echo "Updating Android-Esp32 repo..."
 echo ""
 
-cd ~/
-rm -rf Android-Esp32/ && git clone https://github.com/vtanixDevKid/Android-Esp32
+BASE_DIR="$HOME"
 
-sleep 1
-cd Android-Esp32/
-sleep 1
-cd ..
-cd Android-Esp32/
+REPO_DIR="$BASE_DIR/Android-Esp32"
+
+if [ -d "$REPO_DIR" ]; then
+    echo "Removing old folder..."
+    rm -rf "$REPO_DIR"
+fi
+
+echo "Cloning repository..."
+git clone https://github.com/vtanixDevKid/Android-Esp32 "$REPO_DIR"
+
+cd "$REPO_DIR" || { echo "Failed to enter repo folder"; exit 1; }
+
+echo "Update complete!"
