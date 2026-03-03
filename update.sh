@@ -24,10 +24,8 @@ if [ -d "$REPO_DIR/.git" ]; then
 else
     echo "Folder tidak ditemukan atau rusak. Melakukan clone ulang..."
     
-    # Hapus folder lama jika ada sisa-sisa rusak
     rm -rf "$REPO_DIR"
     
-    # Clone ke folder tujuan
     if git clone "$REPO_URL" "$REPO_DIR"; then
         echo ""
         echo "Clone selesai!"
