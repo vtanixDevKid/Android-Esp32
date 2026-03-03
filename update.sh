@@ -1,28 +1,48 @@
 #!/bin/bash
 
-echo "Updating Android-Esp32 repo..."
-echo ""
+# Konfigurasi lokasi
+REPO_DIR="$HOME/Android-Esp32"
+REPO_URL="https://github.com/vtanixDevKid/Android-Esp32"
 
-BASE_DIR="$HOME"
-REPO_DIR="$BASE_DIR/Android-Esp32"
+echo "Checking for updates in Android-Esp32..."
+echo "--------------------------------------"
 
-# Langkah krusial: Pindah ke BASE_DIR dulu
-# Agar kita tidak menghapus folder yang sedang kita tempati
-cd "$BASE_DIR" || exit 1
+# 1. Cek apakah folder repo sudah ada dan merupakan git repo
+if [ -d "$REPO_DIR/.git" ]; then
+    echo "Folder ditemukan. Menarik update terbaru (git pull)..."
+    
+    # Pindah ke folder repo, jika gagal exit
+    cd "$REPO_DIR" || exit 1
+    
+    # Ambil update tanpa menghapus folder (Solusi agar 'ls' tidak kosong)
+    if git pull; then
+        echo ""
+        echo "Update sukses via git pull!"
+    else
+        echo "Gagal melakukan pull. Mencoba cara reset..."
+        git fetch --all
+        git reset --hard origin/main
+    fi
 
-if [ -d "$REPO_DIR" ]; then
-    echo "Removing old folder..."
-    rm -rf "$REPO_DIR"
-fi
-
-echo "Cloning repository..."
-# Pastikan git clone berjalan di BASE_DIR
-git clone https://github.com/vtanixDevKid/Android-Esp32 "$REPO_DIR"
-
-# Masuk kembali ke folder yang baru di-clone
-if cd "$REPO_DIR"; then
-    echo "Update complete!"
+# 2. Jika folder tidak ada, baru lakukan clone pertama kali
 else
-    echo "Failed to enter repo folder"
-    exit 1
+    echo "Folder tidak ditemukan atau rusak. Melakukan clone ulang..."
+    
+    # Hapus folder lama jika ada sisa-sisa rusak
+    rm -rf "$REPO_DIR"
+    
+    # Clone ke folder tujuan
+    if git clone "$REPO_URL" "$REPO_DIR"; then
+        echo ""
+        echo "Clone selesai!"
+        cd "$REPO_DIR" || exit 1
+    else
+        echo "Gagal melakukan clone. Cek koneksi internet kamu."
+        exit 1
+    fi
 fi
+
+echo "--------------------------------------"
+echo "Sekarang kamu berada di: $(pwd)"
+echo "Isi folder saat ini:"
+ls --color=auto
