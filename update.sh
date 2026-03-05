@@ -1,7 +1,9 @@
 #!/bin/bash
 
+figlet "update"
 sleep 1
 clear
+figlet "update"
 REPO_DIR="$HOME/Android-Esp32"
 REPO_URL="https://github.com/vtanixDevKid/Android-Esp32"
 
